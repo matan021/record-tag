@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Record Comparison</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Navbar styles */
+    .navbar {
+      background-color: #333;
+      color: #fff;
+      padding: 10px;
+    }
+
+    .navbar ul {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+    }
+
+    .navbar li {
+      margin-right: 15px;
+    }
+
+    .navbar li:last-child {
+      margin-right: 0;
+    }
+
+    .navbar a {
+      text-decoration: none;
+      color: #fff;
+    }
+
+    .navbar a:hover {
+      text-decoration: underline;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      margin-top: 50px;
+    }
+
+    .record-container {
+      display: flex;
+      justify-content: space-between;
+      width: 600px;
+      margin-bottom: 20px;
+    }
+
+    .record {
+      border: 1px solid #ccc;
+      padding: 20px;
+      flex-basis: 48%;
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 20px;
+    }
+
+    .button {
+      margin: 0 10px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .equal-button {
+      background-color: green;
+      color: white;
+    }
+
+    .not-equal-button {
+      background-color: red;
+      color: white;
+    }
+
+    #comparisonViewer {
+      margin-top: 30px;
+      text-align: center;
+      border: 1px solid #ccc;
+      padding: 20px;
+      width: 600px;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 8px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background-color: blue;
+      color: white;
+    }
+
+    .equal {
+      background-color: green;
+      color: white;
+    }
+
+    .not-equal {
+      background-color: red;
+      color: white;
+    }
+    
+    /* New styles for the dashboard window */
+    
+    .dashboard {
+      position: fixed;
+      top: 50px;
+      right: 50px;
+      width: 300px;
+      background-color: #f1f1f1;
+      border: 1px solid #ccc;
+      padding: 20px;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .dashboard h2 {
+      margin-top: 0;
+    }
+    
+    .dashboard ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    
+    .dashboard li {
+      margin-bottom: 10px;
+    }
+    
+    /* New styles for navigation links */
+    
+    .navigation {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+    
+    .navigation a {
+      text-decoration: none;
+      color: blue;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="navbar">
+    <ul>
+      <li><a onclick="showMostTaggedUserPage()">Most Tagged User</a></li>
+      <li><a onclick="showSummaryPage()">Summary</a></li>
+    </ul>
+  </div>
+
+  <h1>Record Comparison</h1>
+
+  <div class="container">
+    <div class="record-container">
+      <div class="record">
+        <h2>Record 1</h2>
+        <p>Record ID: <span id="record1Id"></span></p>
+        <p>Age: <span id="age1"></span></p>
+        <p>Name: <span id="name1"></span></p>
+        <p>Weight: <span id="weight1"></span></p>
+      </div>
+
+      <div class="record">
+        <h2>Record 2</h2>
+        <p>Record ID: <span id="record2Id"></span></p>
+        <p>Age: <span id="age2"></span></p>
+        <p>Name: <span id="name2"></span></p>
+        <p>Weight: <span id="weight2"></span></p>
+      </div>
+    </div>
+
+    <div>
+      <label for="descriptionInput">Description:</label>
+      <input type="text" id="descriptionInput">
+    </div>
+
+    <div class="buttons">
+      <button class="button equal-button" onclick="compareRecords(true)">Equal</button>
+      <button class="button not-equal-button" onclick="compareRecords(false)">Not Equal</button>
+    </div>
+
+    <div id="comparisonViewer">
+      <h2>Comparison Viewer</h2>
+      <table id="comparisonTable">
+        <thead>
+          <tr>
+            <th>Is Equal</th>
+            <th>Description</th>
+            <th>Record 1</th>
+            <th>Record 2</th>
+            <th>Name</th>
+          </tr>
+        </thead>
+        <tbody id="comparisonList"></tbody>
+      </table>
+    </div>
+    
+    <div class="dashboard">
+      <h2>Most Tagged User</h2>
+      <ul id="taggedUserList"></ul>
+    </div>
+
+  </div>
+
+  <script>
+    const record1 = {
+      recordId: 1,
+      age: 25,
+      name: "John",
+      weight: 70
+    };
+
+    const record2 = {
+      recordId: 2,
+      age: 30,
+      name: "Jane",
+      weight: 65
+    };
+
+    const comparisonList = document.getElementById("comparisonList");
+    const taggedUserList = document.getElementById("taggedUserList");
+
+    // Get the user's name from the query parameter in the URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const userName = urlParams.get('name');
+
+    // Function to compare two records
+    function compareRecords(equal) {
+      const description = document.getElementById("descriptionInput").value;
+
+      const newRow = document.createElement("tr");
+      newRow.innerHTML = `
+        <td class="${equal ? 'equal' : 'not-equal'}">${equal ? "Equal" : "Not Equal"}</td>
+        <td>${description}</td>
+        <td>${record1.recordId}, ${record1.age}, ${record1.name}, ${record1.weight}</td>
+        <td>${record2.recordId}, ${record2.age}, ${record2.name}, ${record2.weight}</td>
+        <td>${userName}</td>
+      `;
+      comparisonList.appendChild(newRow);
+
+      // Create the data object to send in the POST request
+      const data = {
+        record1Id: record1.recordId,
+        record2Id: record2.recordId,
+        equal: equal,
+        description: description,
+        name: userName // Include the user's name in the data
+      };
+
+      // Send the POST request to the API endpoint
+      fetch('/api/comparison', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      })
+      .then(response => {
+        if (response.ok) {
+          console.log('Comparison saved successfully');
+        } else {
+          throw new Error('Failed to save comparison');
+        }
+      })
+      .catch(error => {
+        console.error('Error saving comparison:', error.message);
+      });
+
+      loadNewComparison();
+    }
+
+    // Function to load new comparison (random records)
+    function loadNewComparison() {
+      const newRecord1 = generateRandomRecord();
+      const newRecord2 = generateRandomRecord();
+
+      document.getElementById("record1Id").textContent = newRecord1.recordId;
+      document.getElementById("age1").textContent = newRecord1.age;
+      document.getElementById("name1").textContent = newRecord1.name;
+      document.getElementById("weight1").textContent = newRecord1.weight;
+
+      document.getElementById("record2Id").textContent = newRecord2.recordId;
+      document.getElementById("age2").textContent = newRecord2.age;
+      document.getElementById("name2").textContent = newRecord2.name;
+      document.getElementById("weight2").textContent = newRecord2.weight;
+    }
+
+    // Function to generate a random record
+    function generateRandomRecord() {
+      const recordId = Math.floor(Math.random() * 1000) + 1;
+      const age = Math.floor(Math.random() * 50) + 20;
+      const names = ["Alice", "Bob", "Charlie", "David", "Eve", "Frank", "Grace"];
+      const name = names[Math.floor(Math.random() * names.length)];
+      const weight = Math.floor(Math.random() * 50) + 40;
+
+      return {
+        recordId: recordId,
+        age: age,
+        name: name,
+        weight: weight
+      };
+    }
+
+    // Initial load of random records
+    loadNewComparison();
+    
+    // Dummy function to simulate tagged users data
+    function loadTaggedUsers() {
+      const users = ["Alice", "Bob", "Charlie", "David", "Eve", "Frank", "Grace"];
+      users.forEach(user => {
+        const listItem = document.createElement("li");
+        listItem.textContent = user;
+        taggedUserList.appendChild(listItem);
+      });
+    }
+    
+    // Load tagged users data
+    loadTaggedUsers();
+    
+    // Function to show the Most Tagged User page
+    function showMostTaggedUserPage() {
+      window.location.href = "most-tagged-user.html";
+    }
+    
+    // Function to show the Summary page
+    function showSummaryPage() {
+      window.location.href = "summary.html";
+    }
+  </script>
+</body>
+</html>
